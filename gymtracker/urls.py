@@ -18,8 +18,13 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
 from trainlog.views import ExerciseViewSet
+from rest_framework.authtoken import views as views_auth_token
 
 router = routers.DefaultRouter()
 router.register(r"exercise", ExerciseViewSet, basename="exercise")
 
-urlpatterns = [path("admin/", admin.site.urls), path("api/", include(router.urls))]
+urlpatterns = [
+    path("admin/", admin.site.urls),
+    path("api/", include(router.urls)),
+    path("api-token-auth/", views_auth_token.obtain_auth_token),
+]

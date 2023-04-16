@@ -1,10 +1,5 @@
 from rest_framework import serializers
 from .models import Exercise
-from django.urls import reverse
-from .hashid import HashidRouter
-from rest_framework.response import Response
-from rest_framework import status
-
 
 
 class ExerciseSerializer(serializers.HyperlinkedModelSerializer):
@@ -23,5 +18,7 @@ class ExerciseSerializer(serializers.HyperlinkedModelSerializer):
             "last_modified",
             "created_at",
         ]
-    
-    
+
+    def create(self, validated_data):
+        validated_data["user"] = self.context["request"].user
+        return super().create(validated_data)

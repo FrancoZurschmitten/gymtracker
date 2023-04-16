@@ -24,7 +24,7 @@ class CreateInfo(models.Model):
 # Model for general or primary muscle groups in the gym.
 class MuscleGroup(NameInfo, CreateInfo):
     class Meta:
-        db_table = "muscle_groups"
+        db_table = "muscle_group"
         get_latest_by = "order_date"
 
     def __str__(self):
