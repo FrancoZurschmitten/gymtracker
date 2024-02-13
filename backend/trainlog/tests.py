@@ -34,7 +34,8 @@ class ExerciseViewSetTests(APITestCase):
             user=self.user, name="testexercise", public=True
         )
         url = reverse("exercise-detail", kwargs={"pk": exercise.pk})
-        response = self.client.put(url, {"name": "changetestexercise"}, format="json")
+        response = self.client.put(
+            url, {"name": "changetestexercise"}, format="json")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
@@ -48,7 +49,8 @@ class ExerciseNoteViewSetTests(APITestCase):
         self.client.force_authenticate(user=self.user)
 
     def test_create_exercise_note_with_exercise_by_other_user(self):
-        user2 = UserModel.objects.create(username="testuser2", password="testpassword")
+        user2 = UserModel.objects.create(
+            username="testuser2", password="testpassword")
         exercise = Exercise.objects.create(user=user2, name="testexercise")
 
         url = reverse("exercise-note-list")
@@ -56,7 +58,8 @@ class ExerciseNoteViewSetTests(APITestCase):
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         json = response.json()
-        self.assertEqual(ExerciseNote.objects.get(pk=json["id"]).user, self.user)
+        self.assertEqual(ExerciseNote.objects.get(
+            pk=json["id"]).user, self.user)
 
 
 class SerieNoteViewSetTests(APITestCase):
@@ -76,11 +79,16 @@ class SerieNoteViewSetTests(APITestCase):
             "rir_value": None,
             "observations": "",
         }
+        self.exercise = Exercise.objects.create(
+            user=self.user, name="testexercise")
+        self.exercise_note = ExerciseNote.objects.create(
+            user=self.user, exercise=self.exercise)
 
     def test_create_serie_note_with_exercise_note_by_other_user(self):
-        user2 = UserModel.objects.create(username="testuser2", password="testpassword")
-        exercise = Exercise.objects.create(user=user2, name="testexercise")
-        exercise_note = ExerciseNote.objects.create(user=user2, exercise=exercise)
+        user2 = UserModel.objects.create(
+            username="testuser2", password="testpassword")
+        exercise_note = ExerciseNote.objects.create(
+            user=user2, exercise=self.exercise)
 
         url = reverse("serie-note-list")
         data = self.serie_note_data
@@ -95,12 +103,10 @@ class SerieNoteViewSetTests(APITestCase):
         )
 
     def test_create_serie_note_with_exercise_note_by_current_user(self):
-        exercise = Exercise.objects.create(user=self.user, name="testexercise")
-        exercise_note = ExerciseNote.objects.create(user=self.user, exercise=exercise)
 
         url = reverse("serie-note-list")
         data = self.serie_note_data
-        data["exercise_note"] = exercise_note.pk
+        data["exercise_note"] = self.exercise_note.pk
 
         response = self.client.post(url, data, format="json")
 
@@ -109,6 +115,24 @@ class SerieNoteViewSetTests(APITestCase):
         json = response.json()
         self.assertEqual(
             SerieNote.objects.get(id=json["id"]).exercise_note.user, self.user
+        )
+
+    def test_unique_serie_number_within_relation(self):
+        serie_note = SerieNote.objects.create(
+            serie_number=1, weight_in_kg=50, repetitions=10, exercise_note=self.exercise_note)
+
+        url = reverse("serie-note-list")
+        data = self.serie_note_data
+        data["exercise_note"] = self.exercise_note.pk
+
+        response = self.client.post(url, data, format="json")
+        
+        print([(i.pk, i.serie_number) for i in SerieNote.objects.filter(exercise_note=self.exercise_note.pk).all()])
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_400_BAD_REQUEST,
+            f"The {self.model._meta.model_name.upper()} should only accept unique serie_number",
         )
 
 

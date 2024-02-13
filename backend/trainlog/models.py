@@ -2,7 +2,6 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth import get_user_model
 
-
 UserModel = get_user_model()
 default_user, _ = UserModel.objects.get_or_create(username="simon_petrikov")
 
@@ -49,7 +48,8 @@ class SerieNote(models.Model):
     exercise_note = models.ForeignKey(ExerciseNote, on_delete=models.CASCADE)
 
     serie_number = models.IntegerField(
-        validators=[MinValueValidator(0), MaxValueValidator(10)]
+        validators=[MinValueValidator(0), MaxValueValidator(
+            10), ]
     )
     repetitions = models.IntegerField(
         validators=[MinValueValidator(0), MaxValueValidator(30)]
@@ -66,6 +66,9 @@ class SerieNote(models.Model):
         validators=[MinValueValidator(0), MaxValueValidator(10)], blank=True, null=True
     )
     observations = models.TextField(max_length=150, blank=True, null=True)
+
+    class Meta:
+        unique_together = ["exercise_note", "serie_number"]
 
     def __str__(self):
         return f"{self.exercise_note}: {self.serie_number}"
