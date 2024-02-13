@@ -22,7 +22,7 @@ DATABASES = {
     }
 }
 
-CORS_ALLOWED_ORIGINS = ["https://www.gymtracker-app.vercel.com"]
+CORS_ALLOWED_ORIGINS = ["https://gymtracker-app.vercel.app"]
 
 SIMPLE_JWT = {
     "SIGNING_KEY": SECRETS["JWT_SECRET_KEY"],
