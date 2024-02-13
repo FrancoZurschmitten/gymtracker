@@ -16,7 +16,7 @@ export function useVisibleColumns(
   const headerColumns = useMemo(() => {
     if (visibleColumns === "all") return columns;
     return columns.filter((column) => visibleColumns.has(column.uid));
-  }, [visibleColumns]);
+  }, [visibleColumns, columns]);
 
   return { headerColumns, visibleColumns, setVisibleColumns };
 }

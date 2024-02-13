@@ -4,7 +4,9 @@ import { Key, useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Pagination,
+  Button,
   Spinner,
+  SortDescriptor,
   Selection,
   Table,
   TableBody,
@@ -12,60 +14,65 @@ import {
   TableColumn,
   TableHeader,
   TableRow,
-  Chip,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  Link,
 } from "@nextui-org/react";
 import { useQueryString } from "@/hooks/use-query-string";
 import { pageSize } from "@/config/constants";
-import { getMuscleGroupLabel } from "@/lib/utils";
 import { EmptyContent } from "@/components/widgets/empty-content";
-import { useFetchExercises } from "../../hooks/use-fetch-exercises";
-import { exerciseAPI } from "../../services";
-import { AdaptedExercise } from "../../adapters/types";
+import { useFetchNotes } from "../../hooks/use-fetch-notes";
+import { noteAPI } from "../../services";
+import { AdaptedNote } from "../../adapters/types";
 import { ActionDropdown } from "@/components/ui/action-dropdown";
 import ColumnsDropdown from "@/components/widgets/columns-dropdown";
 import SearchInput from "@/components/widgets/search-input";
-import ExerciseFormModal from "./exercise-form-modal";
-import ExerciseViewModal from "./exercise-view-modal";
 import { useVisibleColumns } from "@/hooks/use-visible-columns";
 import SelectedInfo from "@/components/widgets/selected-info";
 import { TableItemsInfo } from "@/components/widgets/table-items-info";
-import { usePagination } from "@/hooks/use-pagination";
-import { useSearch } from "@/hooks/use-search";
-import { useOrdering } from "@/hooks/use-ordering";
+import SerieNoteView from "./serie-notes/serie-note-view";
+import NextLink from "next/link";
 import PlusButton from "@/components/ui/plus-button";
 
 const columns = [
-  { name: "NOMBRE", uid: "name", sortable: true },
-  { name: "DESCRIPCIÓN", uid: "description" },
-  { name: "GRUPO MUSCULAR", uid: "muscleGroup" },
-  { name: "ES PÚBLICO", uid: "isPublic" },
+  { name: "EJERCICIO", uid: "exercise", sortable: true },
+  { name: "SERIES", uid: "serieNotes" },
+  { name: "FECHA DE CREACIÓN", uid: "date", sortable: true },
   { name: "ACCIONES", uid: "actions" },
 ];
-const INITIAL_VISIBLE_COLUMNS = ["name", "muscleGroup", "isPublic", "actions"];
+const INITIAL_VISIBLE_COLUMNS = ["exercise", "serieNotes", "date", "actions"];
 
-export default function ExerciseTable({
+export default function NoteTable({
   selectedKeys,
   setSelectedKeys,
   selectionMode = "none",
+  isCompact = false,
 }: {
   selectedKeys?: Selection;
   setSelectedKeys?: (value: Selection) => void;
   selectionMode?: "single" | "multiple" | "none";
+  isCompact?: boolean;
+  isReadOnly?: boolean;
 }) {
-  const isReadOnly = selectionMode !== "none";
   const router = useRouter();
   const pathname = usePathname();
 
-  const { currentPage, handlePageChange, offset } = usePagination();
-  const { searchValue, handleSearchValueChange } = useSearch();
-  const { sortDescriptor, setSortDescriptor, orderingValue } = useOrdering();
+  const [currentPage, setCurrentPage] = useState(1);
+  const offset = useMemo(() => (currentPage - 1) * pageSize, [currentPage]);
 
-  const { visibleColumns, setVisibleColumns, headerColumns } =
-    useVisibleColumns(INITIAL_VISIBLE_COLUMNS, columns);
+  const [searchValue, setSearchValue] = useState("");
+  const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
+    column: "id",
+    direction: "ascending",
+  });
+  const orderingValue = useMemo(
+    () =>
+      (sortDescriptor.direction === "ascending" ? "" : "-") +
+      sortDescriptor.column,
 
-  const [itemView, setItemView] = useState<any>();
-  const [itemChange, setItemChange] = useState<any>();
-  const [isOpenModalForm, setOpenModalForm] = useState(false);
+    [sortDescriptor]
+  );
 
   const { queryStrings } = useQueryString([
     { name: "limit", value: pageSize },
@@ -74,14 +81,16 @@ export default function ExerciseTable({
     { name: "ordering", value: orderingValue },
   ]);
 
+  const { visibleColumns, setVisibleColumns, headerColumns } =
+    useVisibleColumns(INITIAL_VISIBLE_COLUMNS, columns);
+
   const { fetchData, isFetching, fetchError, mutate } =
-    useFetchExercises(queryStrings);
+    useFetchNotes(queryStrings);
 
   useEffect(() => {
-    if (fetchError && currentPage > 1) {
-      router.push(pathname);
-    }
-  }, [fetchError, currentPage, router, pathname]);
+    if (fetchError && currentPage > 1)
+      setCurrentPage((prevPage) => prevPage - 1);
+  }, [fetchError, currentPage, setCurrentPage]);
 
   const classNames = useMemo(
     () => ({
@@ -107,70 +116,90 @@ export default function ExerciseTable({
 
   const handleSearchChange = useCallback(
     (value: string | undefined) => {
-      handleSearchValueChange(value ?? "");
-      handlePageChange(1);
+      setSearchValue(String(value));
+      setCurrentPage(1);
     },
-    [handleSearchValueChange, handlePageChange]
+    [setSearchValue, setCurrentPage]
   );
 
   const handleClear = useCallback(() => {
-    handleSearchValueChange("");
-    handlePageChange(1);
-  }, [handleSearchValueChange, handlePageChange]);
+    setSearchValue("");
+    setCurrentPage(1);
+  }, [setSearchValue, setCurrentPage]);
 
   const handleAction = useCallback(
-    (key: Key, item: AdaptedExercise) => {
+    (key: Key, item: AdaptedNote) => {
       switch (key) {
-        case "view":
-          return setItemView(item);
-
         case "change":
-          return setItemChange(item);
+          return router.push(pathname + `/${item.id}/update`);
 
         case "delete":
-          return exerciseAPI.deleteExercise(item.id).then(() => mutate());
+          return noteAPI
+            .deleteNote(item.id)
+            .then(() => mutate())
+            .catch(() => alert("No se pudo borrar la nota"));
 
         default:
           return null;
       }
     },
-    [setItemView, setItemChange, mutate]
+    [router, mutate, pathname]
   );
 
   const renderCell = useCallback(
-    (item: AdaptedExercise, columnKey: Key) => {
+    (item: AdaptedNote, columnKey: Key) => {
       switch (columnKey) {
         case "actions":
           return (
             <ActionDropdown
-              isReadOnly={isReadOnly || item.isPublic}
+              isEditingOnly
               onAction={(key) => handleAction(key, item)}
             />
           );
 
-        case "name":
-          return item.name;
-
-        case "description":
-          return <p className="text-default-500">{item.description}</p>;
-
-        case "muscleGroup":
-          return item.muscleGroup ? (
-            <Chip variant="flat">{getMuscleGroupLabel(item.muscleGroup)}</Chip>
-          ) : null;
-
-        case "isPublic":
+        case "exercise":
           return (
-            <Chip color={item.isPublic ? "success" : "default"} variant="flat">
-              {item.isPublic ? "Si" : "No"}
-            </Chip>
+            <Link
+              as={NextLink}
+              href={"exercises/" + `${item.exercise.id}`}
+              isBlock
+              showAnchorIcon
+              color="foreground"
+            >
+              {item.exercise.name}
+            </Link>
           );
 
+        case "serieNotes":
+          return (
+            <div className="flex gap-1">
+              {item.serieNotes.map((item) => {
+                return (
+                  <Popover key={item.id} size="sm" showArrow>
+                    <PopoverTrigger>
+                      <Button size="sm" isIconOnly>
+                        {item.serieNumber}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent>
+                      <div className="px-1 py-2">
+                        <SerieNoteView itemView={item} />
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                );
+              })}
+            </div>
+          );
+
+        case "date":
+          return item.date;
+
         default:
-          return item[columnKey as keyof AdaptedExercise] as any;
+          return item[columnKey as keyof AdaptedNote] as any;
       }
     },
-    [handleAction, isReadOnly]
+    [handleAction]
   );
 
   const topContent = useMemo(() => {
@@ -190,26 +219,7 @@ export default function ExerciseTable({
               onSelectionChange={setVisibleColumns}
             />
 
-            {!isReadOnly && (
-              <PlusButton onPress={() => setOpenModalForm(true)} />
-            )}
-
-            <ExerciseViewModal
-              itemView={itemView}
-              onOpenChange={() => setItemView(undefined)}
-            />
-
-            {!isReadOnly && (
-              <ExerciseFormModal
-                itemToEdit={itemChange}
-                isOpen={isOpenModalForm}
-                onOpenChange={() => {
-                  setItemChange(undefined);
-                  setOpenModalForm(false);
-                }}
-                callback={mutate}
-              />
-            )}
+            <PlusButton isLink />
           </div>
         </div>
 
@@ -223,14 +233,6 @@ export default function ExerciseTable({
     visibleColumns,
     setVisibleColumns,
     fetchData,
-    setOpenModalForm,
-    itemView,
-    setItemView,
-    itemChange,
-    isOpenModalForm,
-    setItemChange,
-    mutate,
-    isReadOnly,
   ]);
 
   const bottomContent = useMemo(() => {
@@ -246,7 +248,7 @@ export default function ExerciseTable({
             color="primary"
             page={currentPage}
             total={totalPages}
-            onChange={handlePageChange}
+            onChange={(page) => setCurrentPage(page)}
           />
         )}
 
@@ -260,7 +262,7 @@ export default function ExerciseTable({
   }, [
     currentPage,
     totalPages,
-    handlePageChange,
+    setCurrentPage,
     selectionMode,
     selectedKeys,
     fetchData,
@@ -272,9 +274,9 @@ export default function ExerciseTable({
       isHeaderSticky
       classNames={classNames}
       topContent={topContent}
-      topContentPlacement={isReadOnly ? "inside" : "outside"}
+      topContentPlacement="outside"
       bottomContent={bottomContent}
-      bottomContentPlacement={isReadOnly ? "inside" : "outside"}
+      bottomContentPlacement="outside"
       sortDescriptor={sortDescriptor}
       onSortChange={setSortDescriptor}
       // Selection
@@ -282,7 +284,7 @@ export default function ExerciseTable({
       selectionMode={selectionMode}
       selectedKeys={selectedKeys}
       onSelectionChange={setSelectedKeys}
-      isCompact={isReadOnly}
+      isCompact={isCompact}
     >
       <TableHeader columns={headerColumns}>
         {(column) => (

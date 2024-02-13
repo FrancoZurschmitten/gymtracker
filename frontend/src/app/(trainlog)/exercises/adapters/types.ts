@@ -1,4 +1,4 @@
-import { ListResponse } from "@/services";
+import { ListResponse } from "@/services/types";
 
 export type AdaptedExercise = {
   id: number;

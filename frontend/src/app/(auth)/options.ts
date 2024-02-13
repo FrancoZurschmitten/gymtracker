@@ -21,7 +21,8 @@ const signInProvider = CredentialsProvider({
 
     return await authAPI
       .signIn(credentials)
-      .then((data) => createAdaptedUserAndTokens(data) as any);
+      .then((data) => createAdaptedUserAndTokens(data) as any)
+      .catch(() => null);
   },
 });
 
@@ -35,16 +36,20 @@ const signUpProvider = CredentialsProvider({
   async authorize(credentials) {
     if (!credentials) return null;
 
-    const adaptedUser = await authAPI
-      .getCurrentUser(credentials.accessToken)
-      .then((data) => createAdaptedUser(data));
+    try {
+      const adaptedUser = await authAPI
+        .getCurrentUser(credentials.accessToken)
+        .then((data) => createAdaptedUser(data));
 
-    const userAndTokens: AdaptedUserAndTokens = {
-      user: adaptedUser,
-      ...credentials,
-    };
+      const userAndTokens: AdaptedUserAndTokens = {
+        user: adaptedUser,
+        ...credentials,
+      };
 
-    return userAndTokens as any;
+      return userAndTokens as any;
+    } catch {
+      return null;
+    }
   },
 });
 
@@ -68,6 +73,7 @@ export const authOptions: NextAuthOptions = {
         token.accessToken = user.accessToken;
         token.refreshToken = user.refreshToken;
         token.expires_at = accessTokenExpiration;
+        return token;
       }
 
       if (Date.now() > token.expires_at) {

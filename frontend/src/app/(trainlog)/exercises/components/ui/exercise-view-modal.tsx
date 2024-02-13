@@ -7,6 +7,7 @@ import {
   ModalHeader,
 } from "@nextui-org/react";
 import { AdaptedExercise } from "../../adapters/types";
+import NextLink from "next/link";
 
 export default function ExerciseViewModal({
   itemView,
@@ -33,6 +34,14 @@ export default function ExerciseViewModal({
               <ModalFooter>
                 <Button color="danger" variant="light" onPress={onClose}>
                   Close
+                </Button>
+                <Button
+                  color="primary"
+                  variant="flat"
+                  as={NextLink}
+                  href={`/exercises/${itemView.id}`}
+                >
+                  Ver en detalle
                 </Button>
               </ModalFooter>
             </>

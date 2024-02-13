@@ -19,6 +19,7 @@ import {
   createAdaptedUserAndTokens,
 } from "../adapters";
 import { AdaptedSignUpFormDataError } from "../adapters/types";
+import ErrorView from "@/components/ui/error-view";
 
 export default function SignUpForm() {
   const [username, setUsername] = useState("");
@@ -52,19 +53,13 @@ export default function SignUpForm() {
   };
 
   return (
-    <Card className="min-w-72 max-w-[30rem]">
-      <CardHeader className="flex w-full justify-center">
-        <h1 className={title({ size: "sm", className: "text-center" })}>
-          Registrarse
-        </h1>
+    <Card fullWidth>
+      <CardHeader className="justify-center">
+        <h1 className={title()}>Registrarse</h1>
       </CardHeader>
       <CardBody>
         <form id="signUpForm" onSubmit={onSubmit} className="space-y-4">
-          {error?.nonFieldErrors ? (
-            <p className="text-small text-danger text-center">
-              {error.nonFieldErrors.join("\n")}
-            </p>
-          ) : null}
+          <ErrorView message={error?.nonFieldErrors} />
           <Input
             isRequired
             label="Username"
@@ -105,7 +100,13 @@ export default function SignUpForm() {
         </form>
       </CardBody>
       <CardFooter>
-        <Button form="signUpForm" type="submit" color="primary" fullWidth>
+        <Button
+          size="lg"
+          form="signUpForm"
+          type="submit"
+          color="primary"
+          fullWidth
+        >
           Registrarse
         </Button>
       </CardFooter>

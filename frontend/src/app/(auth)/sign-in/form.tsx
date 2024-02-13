@@ -14,6 +14,7 @@ import { useSearchParams } from "next/navigation";
 import NextLink from "next/link";
 import { FormEvent, useRef, useState } from "react";
 import { title } from "@/components/ui/primitives";
+import ErrorView from "@/components/ui/error-view";
 
 export default function SignInForm() {
   const searchParams = useSearchParams();
@@ -43,15 +44,13 @@ export default function SignInForm() {
   };
 
   return (
-    <Card className="min-w-72 max-w-[30rem]">
-      <CardHeader className="flex w-full justify-center">
-        <h1 className={title({ size: "sm" })}>Inicio de sesión</h1>
+    <Card fullWidth>
+      <CardHeader className="justify-center">
+        <h1 className={title()}>Inicio de sesión</h1>
       </CardHeader>
       <CardBody>
         <form id="signInForm" onSubmit={handleSubmit} className="space-y-4">
-          {error ? (
-            <p className="text-small text-danger text-center">{error}</p>
-          ) : null}
+          <ErrorView message={error} />
           <Input
             isRequired
             label="Username"
@@ -75,7 +74,13 @@ export default function SignInForm() {
         </form>
       </CardBody>
       <CardFooter>
-        <Button form="signInForm" type="submit" color="primary" fullWidth>
+        <Button
+          size="lg"
+          form="signInForm"
+          type="submit"
+          color="primary"
+          fullWidth
+        >
           Iniciar session
         </Button>
       </CardFooter>

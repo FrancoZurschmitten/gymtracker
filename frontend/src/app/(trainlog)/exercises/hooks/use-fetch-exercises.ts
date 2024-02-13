@@ -9,23 +9,21 @@ const swrOptions = {
 };
 
 const fetchAdaptedExercises = async (filters?: string) => {
-  return exerciseAPI.getExercises(filters).then((data) => ({
+  return await exerciseAPI.getExercises(filters).then((data) => ({
     ...data,
     results: data.results.map((item) => createAdaptedExercise(item)),
   }));
 };
 
 export const useFetchExercises = (filters?: string) => {
+  const key = "exercises" + (filters ? filters : "");
+
   const {
     data: fetchData,
     isLoading: isFetching,
     error: fetchError,
     mutate,
-  } = useSWR(
-    "exercises" + (filters ? filters : ""),
-    () => fetchAdaptedExercises(filters),
-    swrOptions
-  );
+  } = useSWR(key, () => fetchAdaptedExercises(filters), swrOptions);
 
   return { fetchData, isFetching, fetchError, mutate };
 };

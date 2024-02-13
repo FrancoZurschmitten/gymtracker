@@ -9,14 +9,13 @@ import {
   NavbarContent,
   NavbarItem,
   Link,
-  Avatar,
   Dropdown,
   DropdownTrigger,
   DropdownMenu,
   DropdownItem,
   Button,
-  Skeleton,
   ButtonGroup,
+  Skeleton,
 } from "@nextui-org/react";
 import { ThemeSwitch } from "@/components/widgets/theme-switch";
 import { usePathname, useRouter } from "next/navigation";
@@ -24,14 +23,26 @@ import NextLink from "next/link";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { ChevronDownIcon } from "@/components/ui/icons";
 import clsx from "clsx";
+import { Session } from "next-auth";
+import UserNavMenu from "./user-nav-menu";
 
 const menuItems = [{ label: "Profile", href: "/profile" }];
 
 export function Navigation() {
   const pathname = usePathname();
   const router = useRouter();
-  const session = useSession();
-  const user = session.data?.user;
+  const { data: session, status } = useSession();
+
+  const user = useMemo(() => {
+    if (session) return session.user;
+    return null;
+  }, [session]);
+
+  useEffect(() => {
+    if (session?.error === "RefreshAccessTokenError") {
+      signOut();
+    }
+  }, [session]);
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -57,6 +68,22 @@ export function Navigation() {
     },
     [pathname]
   );
+
+  const userMenu = useMemo(() => {
+    if (user) {
+      return <UserNavMenu user={user} />;
+    }
+
+    if (status === "loading") {
+      return <Skeleton className="w-8 h-8 rounded-full" />;
+    }
+
+    return (
+      <Button color="primary" variant="flat" onClick={() => signIn()}>
+        Iniciar sesión
+      </Button>
+    );
+  }, [user, status]);
 
   const exerciseMenu = useMemo(() => {
     const isActive = isActiveLink("/exercises");
@@ -166,44 +193,7 @@ export function Navigation() {
 
       <NavbarContent justify="end">
         <ThemeSwitch />
-        {user ? (
-          <Dropdown placement="bottom-end">
-            <DropdownTrigger>
-              <Avatar
-                isBordered
-                as="button"
-                className="transition-transform"
-                color="primary"
-                name={
-                  user.firstName
-                    ? user.firstName[0] + user.lastName[0]
-                    : user.username
-                }
-                size="sm"
-              />
-            </DropdownTrigger>
-            <DropdownMenu aria-label="Profile Actions" variant="flat">
-              <DropdownItem key="profile" className="gap-2">
-                <p className="font-semibold">
-                  Registrado como <b>{user.username}</b>
-                </p>
-              </DropdownItem>
-              <DropdownItem
-                key="logout"
-                onClick={() => signOut()}
-                color="danger"
-              >
-                Log Out
-              </DropdownItem>
-            </DropdownMenu>
-          </Dropdown>
-        ) : session.status === "loading" ? (
-          <Skeleton className="flex rounded-full w-8 h-8" />
-        ) : (
-          <Button color="primary" variant="flat" onClick={() => signIn()}>
-            Iniciar sesión
-          </Button>
-        )}
+        {userMenu}
       </NavbarContent>
 
       <NavbarMenu>

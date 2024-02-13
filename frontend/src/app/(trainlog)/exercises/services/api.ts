@@ -1,7 +1,7 @@
 import { API } from "@/services/utils";
 import { Exercise, ExerciseFormData, ExerciseList } from "./types";
 
-const endpoint = "trainlog/exercise/";
+const endpoint = "trainlog/exercises/";
 
 export async function getExercises(filters?: string): Promise<ExerciseList> {
   return await API.get(endpoint + (filters ? filters : "")).then(

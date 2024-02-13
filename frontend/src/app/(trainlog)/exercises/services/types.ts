@@ -8,7 +8,7 @@ export type Exercise = {
   public: boolean;
 };
 
-export type ExerciseList = ListResponse & {
+export type ExerciseList = Omit<ListResponse, "resutls"> & {
   results: Exercise[];
 };
 

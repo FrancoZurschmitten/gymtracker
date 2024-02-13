@@ -1,9 +1,12 @@
+import { Suspense } from "react";
 import SignInForm from "./form";
 
-export default async function SignInPage() {
+export default function SignInPage() {
   return (
-    <div className="flex flex-col justify-center items-center mt-20">
-      <SignInForm />
-    </div>
+    <section className="max-w-sm m-auto py-8 md:py-10">
+      <Suspense>
+        <SignInForm />
+      </Suspense>
+    </section>
   );
 }
