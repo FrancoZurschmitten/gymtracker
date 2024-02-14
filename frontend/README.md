@@ -1,36 +1,40 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# GymTracker App
 
-## Getting Started
+## Tutorial
 
-First, run the development server:
+Para empezar a usar la app, debes iniciar sesión con un usuario y contraseña.
+Una vez que te encuentrés authenticado podras usar los dos módulos.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Módulos
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Ejercicio
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+En este módulo encotraras una tabla en la que estarán tus ejercicios.
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+![Tabla de tus ejercicios IMG](https://github.com/FrancoZurschmitten/gymtracker/blob/main/frontend/public/preview/exercise-table-image.png)
 
-## Learn More
 
-To learn more about Next.js, take a look at the following resources:
+Para crear ejercicios tendras que darle al botón azul y rellenar los campos. Actualmente solo es requerido el nombre.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+![Crear un Ejercicio IMG](https://github.com/FrancoZurschmitten/gymtracker/blob/main/frontend/public/preview/exercise-create-image.png)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+### Notas
 
-## Deploy on Vercel
+En este módulo encontraras una tabla en la que estarán tus notas. Aquí es donde registras tu progreso.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+![Tabla de tus notas IMG](https://github.com/FrancoZurschmitten/gymtracker/blob/main/frontend/public/preview/note-table-image.png)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+
+Para crear tus notas primero selecciona tu ejercicio que quieres registrar.
+
+![Crear una Nota IMG](https://github.com/FrancoZurschmitten/gymtracker/blob/main/frontend/public/preview/note-create-image.png)
+
+
+Luego podras crear tus series. Se guardan individualmente, se pueden editar y borrar.
+
+![Crear Series IMG](https://github.com/FrancoZurschmitten/gymtracker/blob/main/frontend/public/preview/series-create-image.png)
+
+
+Finalmente, este es el resultado en la tabla.
+
+![Tabla de Notas con Series creada IMG](https://github.com/FrancoZurschmitten/gymtracker/blob/main/frontend/public/preview/success-note-image.png)
